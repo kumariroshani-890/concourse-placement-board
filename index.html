@@ -1,0 +1,610 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Concourse — Don't miss the drive</title>
+<style>
+  :root {
+    --ink: #0B1220;
+    --ink-2: #121B2E;
+    --paper: #F6F4EE;
+    --paper-dim: #E9E6DC;
+    --amber: #FFB020;
+    --teal: #17726E;
+    --text-hi: #EFEDE4;
+    --text-lo: #9AA3B2;
+    --line: rgba(239,237,228,0.14);
+    --mono: 'IBM Plex Mono', 'SFMono-Regular', Menlo, monospace;
+    --serif: 'Fraunces', Georgia, serif;
+    --sans: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  }
+  [data-theme="light"] {
+    --ink: #F6F4EE;
+    --ink-2: #EFECE2;
+    --text-hi: #0B1220;
+    --text-lo: #55606F;
+    --line: rgba(11,18,32,0.12);
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  html { scroll-behavior:smooth; }
+  body {
+    background: var(--ink);
+    color: var(--text-hi);
+    font-family: var(--sans);
+    transition: background .35s ease, color .35s ease;
+    overflow-x: hidden;
+  }
+  @font-face {
+    font-family: 'Fraunces';
+    src: local('Georgia');
+  }
+  a { color:inherit; text-decoration:none; }
+  .wrap { max-width: 1180px; margin:0 auto; padding: 0 28px; }
+
+  /* NAV */
+  nav {
+    position: sticky; top:0; z-index:50;
+    display:flex; align-items:center; justify-content:space-between;
+    padding: 20px 28px;
+    background: color-mix(in srgb, var(--ink) 88%, transparent);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid var(--line);
+  }
+  .logo { font-family: var(--mono); font-weight:600; letter-spacing:0.08em; font-size:14px; display:flex; align-items:center; gap:8px; }
+  .logo .dot { width:7px; height:7px; border-radius:50%; background: var(--amber); box-shadow: 0 0 10px var(--amber); animation: pulse 2s infinite; }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.35} }
+  .navlinks { display:flex; gap:32px; font-size:13px; color:var(--text-lo); }
+  .navlinks a:hover { color:var(--text-hi); }
+  .theme-btn {
+    font-family: var(--mono); font-size:11px; border:1px solid var(--line);
+    background:transparent; color:var(--text-lo); padding:7px 12px; border-radius:20px; cursor:pointer;
+    transition: all .2s;
+  }
+  .theme-btn:hover { border-color: var(--amber); color: var(--amber); }
+
+  /* HERO */
+  .hero { padding: 100px 28px 60px; text-align:left; }
+  .eyebrow { font-family: var(--mono); font-size:12px; letter-spacing:0.12em; color: var(--amber); margin-bottom:22px; display:flex; align-items:center; gap:10px; }
+  .eyebrow::before { content:''; width:24px; height:1px; background:var(--amber); }
+  h1 {
+    font-family: var(--serif);
+    font-weight: 600;
+    font-size: clamp(40px, 7vw, 84px);
+    line-height: 0.98;
+    letter-spacing: -0.02em;
+    max-width: 900px;
+    margin-bottom: 26px;
+  }
+  h1 em { font-style:italic; color: var(--amber); }
+  .sub { font-size:18px; color:var(--text-lo); max-width:520px; line-height:1.6; margin-bottom:38px; }
+  .cta-row { display:flex; gap:16px; align-items:center; flex-wrap:wrap; }
+  .btn-primary {
+    font-family: var(--mono); font-size:13px; font-weight:600;
+    background: var(--amber); color: var(--ink); padding:15px 26px; border-radius:6px;
+    display:inline-flex; align-items:center; gap:10px; transition: transform .15s ease;
+  }
+  .btn-primary:hover { transform: translateY(-2px); }
+  .btn-ghost { font-family: var(--mono); font-size:13px; color:var(--text-lo); border-bottom:1px solid var(--line); padding-bottom:2px; }
+  .btn-ghost:hover { color: var(--text-hi); border-color: var(--text-hi); }
+
+  /* DEPARTURES BOARD */
+  .board-section { padding: 40px 28px 100px; }
+  .board {
+    background: var(--ink-2);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 30px 80px -30px rgba(0,0,0,0.6);
+  }
+  .board-head {
+    display:flex; justify-content:space-between; align-items:center; gap:20px;
+    padding:16px 22px; border-bottom:1px solid var(--line);
+    font-family:var(--mono); font-size:11px; color:var(--text-lo); letter-spacing:0.08em;
+  }
+  .board-head > span { white-space:nowrap; }
+  .board-head .live { white-space:nowrap; }
+  .board-head .live { color: var(--amber); display:flex; align-items:center; gap:6px; }
+  .board-head .live .d { width:6px; height:6px; border-radius:50%; background:var(--amber); animation: pulse 1.6s infinite; }
+  .row {
+    display:grid;
+    grid-template-columns: 100px 1.6fr 1.4fr 110px 130px;
+    column-gap: 24px; row-gap: 8px;
+    padding: 16px 22px;
+    border-bottom: 1px solid var(--line);
+    font-family: var(--mono);
+    font-size: 13px;
+    align-items:center;
+    transition: background .2s;
+  }
+  .row:last-child { border-bottom:none; }
+  .row:hover { background: color-mix(in srgb, var(--amber) 6%, transparent); }
+  .row { cursor:default; }
+  .row .company { transition: letter-spacing .2s ease; }\n  .row:hover .company { letter-spacing:.015em; }
+  .row .code { color: var(--text-lo); font-size:12px; }
+  .row .company { font-family: var(--sans); font-weight:600; font-size:14px; color:var(--text-hi); }
+  .row .role { color: var(--text-lo); font-size:12.5px; overflow-wrap:anywhere; }
+  .row .company,.row .closes,.row .code { overflow-wrap:anywhere; }
+  .row .closes { color: var(--text-hi); }
+  .status { display:inline-flex; align-items:center; gap:6px; padding:5px 10px; border-radius:20px; font-size:10.5px; letter-spacing:0.06em; justify-self:start; }
+  .status.open { background: rgba(23,114,110,0.18); color:#4FD8CF; }
+  .status.soon { background: rgba(255,176,32,0.16); color: var(--amber); }
+  .status.closed { background: rgba(154,163,178,0.14); color: var(--text-lo); }
+  .status.done { background: rgba(23,114,110,0.12); color:#7ee0d9; }
+  .flip { display:inline-block; animation: flipIn .5s ease backwards; }
+  @keyframes flipIn { from { transform: rotateX(90deg); opacity:0; } to { transform: rotateX(0); opacity:1; } }
+
+  @media (max-width: 700px) {
+    .row { grid-template-columns: 1fr 1fr; row-gap:6px; }
+    .row .code { grid-column: 1/-1; order:-1; }
+    .navlinks { display:none; }
+  }
+
+  /* PRODUCT SHOWCASE */
+  .showcase { padding: 40px 28px 110px; }
+  .showcase-grid { display:grid; grid-template-columns: 1fr 1fr; gap: 60px; align-items:center; }
+  @media (max-width: 900px) { .showcase-grid { grid-template-columns: 1fr; gap:36px; } }
+  .showcase h2 { font-family: var(--serif); font-size: clamp(28px,4vw,42px); margin-bottom:18px; line-height:1.1; }
+  .showcase p { color: var(--text-lo); font-size:15.5px; line-height:1.7; margin-bottom:16px; max-width:440px; }
+  .card-demo {
+    background: var(--ink-2); border:1px solid var(--line); border-radius:12px; padding:26px;
+  }
+  .card-demo .top { display:flex; justify-content:space-between; margin-bottom:20px; }
+  .card-demo .tag { font-family: var(--mono); font-size:10.5px; color:var(--text-lo); letter-spacing:0.08em; }
+  .countdown { font-family: var(--mono); font-size:38px; font-weight:600; color: var(--amber); letter-spacing:0.02em; }
+  .countdown-label { font-family: var(--mono); font-size:11px; color: var(--text-lo); margin-top:6px; }
+  .bars { display:flex; gap:4px; margin-top:22px; }
+  .bar { height:4px; flex:1; background: var(--line); border-radius:2px; overflow:hidden; }
+  .bar span { display:block; height:100%; background: var(--teal); width: 0%; transition: width 1.2s ease; }
+
+  /* FEATURES STRIP */
+  .strip { padding: 20px 28px 110px; }
+  .strip-grid { display:grid; grid-template-columns: repeat(3,1fr); gap:1px; background: var(--line); border:1px solid var(--line); border-radius:10px; overflow:hidden; }
+  @media (max-width:800px){ .strip-grid { grid-template-columns:1fr; } }
+  .strip-item { background: var(--ink); padding: 30px 26px; }
+  .strip-item .num { font-family: var(--mono); font-size:11px; color: var(--amber); margin-bottom:14px; }
+  .strip-item h3 { font-family: var(--serif); font-size:19px; margin-bottom:10px; }
+  .strip-item p { color: var(--text-lo); font-size:14px; line-height:1.6; }
+
+  /* CTA */
+  .final-cta { padding: 60px 28px 140px; text-align:center; }
+  .final-cta h2 { font-family: var(--serif); font-size: clamp(32px,5vw,54px); margin-bottom:20px; }
+  .final-cta p { color:var(--text-lo); margin-bottom:34px; }
+
+  footer { border-top:1px solid var(--line); padding: 30px 28px; display:flex; justify-content:space-between; font-family: var(--mono); font-size:11px; color: var(--text-lo); }
+
+  /* Easter egg overlay */
+  #egg {
+    position:fixed; inset:0; background: rgba(11,18,32,0.96); z-index:999;
+    display:none; align-items:center; justify-content:center; flex-direction:column; text-align:center;
+  }
+  #egg.show { display:flex; }
+  #egg .flip-msg { font-family:var(--mono); color:var(--amber); font-size: clamp(20px,4vw,34px); animation: flipIn .6s ease; margin-bottom:14px; }
+  #egg p { color: var(--text-lo); font-family: var(--mono); font-size:13px; }
+
+  /* Small ownership details */
+  .why-note {
+    margin-top:24px; padding:12px 14px; border-left:2px solid var(--amber);
+    color:var(--text-lo); font-family:var(--mono); font-size:11px; line-height:1.6;
+    max-width:540px;
+  }
+  .board-head { position:relative; }
+  .board-head::after {
+    content:'GLANCE → DECIDE → ACT';
+    position:absolute; left:50%; transform:translateX(-50%);
+    color:var(--text-lo); opacity:.55; font-size:9px; letter-spacing:.12em;
+  }
+  @media (max-width:700px){
+    .board-head::after { display:none; }
+    .hero { padding-top:72px; }
+    .why-note { font-size:10px; }
+  }
+
+  /* DYNAMIC PRODUCT LAYER */
+  .board-tools{display:flex;align-items:center;gap:10px;padding:14px 22px;border-bottom:1px solid var(--line);flex-wrap:wrap}
+  .board-grid-head{display:grid;grid-template-columns:100px 1.6fr 1.4fr 110px 130px;column-gap:24px;align-items:center;padding:10px 22px;border-bottom:1px solid var(--line);font-family:var(--mono);font-size:9px;letter-spacing:.1em;color:var(--text-lo)}
+  .board-grid-head span{white-space:nowrap}
+  .filter-btn{min-width:54px}
+  .filter-btn,.sort-select{font-family:var(--mono);font-size:10px;border:1px solid var(--line);background:transparent;color:var(--text-lo);padding:8px 10px;border-radius:6px;cursor:pointer}
+  .filter-btn.active,.filter-btn:hover,.sort-select:hover{border-color:var(--amber);color:var(--amber)}
+  .filter-btn.active{background:var(--amber);color:var(--ink)}
+  .sort-select{margin-left:auto;outline:none}
+  .add-btn{font-family:var(--mono);font-size:10px;border:1px solid var(--amber);background:transparent;color:var(--amber);padding:8px 12px;border-radius:6px;cursor:pointer}
+  .add-btn:hover{background:var(--amber);color:var(--ink)}
+  .empty-board{padding:38px 22px;text-align:center;color:var(--text-lo);font-family:var(--mono);font-size:11px}
+  .row{cursor:pointer}
+  .row:active{transform:scale(.997)}
+  .next-wrap{padding:10px 28px 45px}
+  .next-card{background:var(--ink-2);border:1px solid var(--line);border-radius:12px;padding:24px;display:grid;grid-template-columns:1fr auto;gap:20px;align-items:center}
+  .next-kicker{font-family:var(--mono);font-size:10px;letter-spacing:.1em;color:var(--amber);margin-bottom:8px}
+  .next-company{font-family:var(--serif);font-size:30px;margin-bottom:5px}
+  .next-role{font-family:var(--mono);font-size:11px;color:var(--text-lo)}
+  .next-time{text-align:right}.next-time .countdown{font-size:38px}
+  .next-label{font-family:var(--mono);font-size:10px;color:var(--text-lo);margin-top:5px}
+  .progress-line{height:4px;background:var(--line);border-radius:3px;margin-top:20px;overflow:hidden}
+  .progress-line span{display:block;height:100%;width:0;background:var(--teal);transition:width .8s linear}
+  .next-actions{margin-top:16px;display:flex;gap:10px;flex-wrap:wrap}
+  .btn-small{font-family:var(--mono);font-size:10px;padding:9px 13px;border:1px solid var(--line);background:transparent;color:var(--text-lo);border-radius:6px;cursor:pointer}
+  .btn-small:hover{border-color:var(--amber);color:var(--amber)}
+  .modal-backdrop{position:fixed;inset:0;background:rgba(5,9,17,.76);backdrop-filter:blur(8px);z-index:100;display:none;align-items:center;justify-content:center;padding:20px}
+  .modal-backdrop.show{display:flex}
+  .modal{width:min(600px,100%);max-height:90vh;overflow:auto;background:var(--ink-2);border:1px solid var(--line);border-radius:12px;padding:25px;box-shadow:0 30px 100px rgba(0,0,0,.5)}
+  .modal-head{display:flex;justify-content:space-between;gap:15px;align-items:flex-start;margin-bottom:20px}
+  .modal h3{font-family:var(--serif);font-size:30px}.modal-close{width:34px;height:34px;padding:0;border-radius:50%;font-size:20px;line-height:1}
+  .detail-label{font-family:var(--mono);font-size:9px;letter-spacing:.1em;color:var(--text-lo);margin-top:15px}
+  .detail-value{font-size:14px;margin-top:5px}
+  .modal-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:24px}
+  .danger-btn{font-family:var(--mono);font-size:10px;padding:10px 13px;border:1px solid rgba(220,90,100,.4);background:transparent;color:#e87983;border-radius:6px;cursor:pointer}
+  .danger-btn:hover{background:rgba(220,90,100,.1)}
+  .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:13px}.field{display:flex;flex-direction:column;gap:7px}.field.full{grid-column:1/-1}
+  .field label{font-family:var(--mono);font-size:9px;letter-spacing:.1em;color:var(--text-lo)}
+  .field input{width:100%;min-width:0;border:1px solid var(--line);background:var(--ink);color:var(--text-hi);padding:11px;border-radius:6px;outline:none}
+  .field input:focus{border-color:var(--amber)}
+  .form-error{display:none;color:#e87983;font-family:var(--mono);font-size:10px;margin-top:12px}
+  .toast{position:fixed;right:20px;bottom:20px;z-index:150;background:var(--text-hi);color:var(--ink);font-family:var(--mono);font-size:10px;padding:12px 15px;border-radius:6px;opacity:0;transform:translateY(12px);transition:.25s;pointer-events:none}
+  .toast.show{opacity:1;transform:translateY(0)}
+  @media(max-width:900px){
+    .board-grid-head{display:none}
+    .row{grid-template-columns:1fr 1fr;column-gap:16px}
+    .row .code{grid-column:1/-1;order:-1}
+  }
+  @media(max-width:700px){
+    .board-head{align-items:flex-start}
+    .board-tools{gap:8px}
+    .next-wrap{padding:10px 20px 35px}.next-card{grid-template-columns:1fr;padding:20px}.next-time{text-align:left}.next-time .countdown{font-size:30px}
+    .board-tools{padding:12px 14px}.sort-select{margin-left:0}.add-btn{margin-left:auto}
+    .form-grid{grid-template-columns:1fr}.field.full{grid-column:auto}
+  }
+  @media(max-width:390px){
+    .filter-btn,.sort-select,.add-btn{font-size:9px;padding:7px 8px}
+    .filter-btn{min-width:auto}
+    .board-head{font-size:9px}
+    .row{padding:15px 14px}
+  }
+
+</style>
+</head>
+<body data-theme="dark">
+
+<nav>
+  <div class="logo"><span class="dot"></span>CONCOURSE</div>
+  <div class="navlinks">
+    <a href="#board">Live board</a>
+    <a href="#product">Product</a>
+    <a href="#cta">Get started</a>
+  </div>
+  <button class="theme-btn" id="themeToggle">DAYLIGHT MODE</button>
+</nav>
+
+<section class="hero">
+  <div class="wrap">
+    <div class="eyebrow">CAMPUS PLACEMENT SEASON, LIVE</div>
+    <h1>Placement season,<br>without the <em>panic.</em></h1>
+    <p class="sub">A departures board for campus placements. Drive codes, deadlines and status in one place — built for the student who has five tabs open and still checks the inbox twice.</p>
+    <div class="cta-row">
+      <a href="#product" class="btn-primary">See the idea →</a>
+      <a href="#board" class="btn-ghost">Watch the board →</a>
+    </div>
+    <div class="why-note">The metaphor is intentional: placement drives already behave like departures — a code, a destination, a closing time, and one decision: board or miss it.</div>
+  </div>
+</section>
+
+
+<section class="next-wrap" id="next">
+  <div class="wrap">
+    <div class="next-card">
+      <div>
+        <div class="next-kicker">NEXT DEPARTURE · PRIORITY DRIVE</div>
+        <div class="next-company" id="nextCompany">Acdyon Technologies</div>
+        <div class="next-role" id="nextRole">AI / Technology Intern · TC.43177</div>
+        <div class="progress-line"><span id="nextProgress"></span></div>
+        <div class="next-actions">
+          <button class="btn-primary" id="nextOpen">View drive →</button>
+          <button class="btn-small" id="nextAdd">+ Add drive</button>
+        </div>
+      </div>
+      <div class="next-time">
+        <div class="countdown" id="nextCountdown">00:00:00</div>
+        <div class="next-label" id="nextLabel">DEPARTURE COUNTDOWN</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="board-section" id="board">
+  <div class="wrap">
+    <div class="board">
+      <div class="board-head">
+        <span>PLACEMENT BOARD · PHAGWARA</span>
+        <span class="live"><span class="d"></span><span id="liveBoardText">LIVE BOARD</span></span>
+      </div>
+      <div class="board-tools">
+        <button class="filter-btn active" data-filter="all">ALL</button>
+        <button class="filter-btn" data-filter="open">OPEN</button>
+        <button class="filter-btn" data-filter="today">TODAY</button>
+        <button class="filter-btn" data-filter="archived">ARCHIVED</button>
+        <select class="sort-select" id="sortSelect">
+          <option value="deadline">SORT: DEADLINE</option>
+          <option value="company">SORT: COMPANY</option>
+          <option value="status">SORT: STATUS</option>
+        </select>
+        <button class="add-btn" id="addDriveBtn">+ ADD DRIVE</button>
+      </div>
+      <div class="board-grid-head">
+        <span>CODE</span><span>COMPANY</span><span>ROLE</span><span>CLOSES</span><span>STATUS</span>
+      </div>
+      <div id="boardRows"></div>
+    </div>
+  </div>
+</section>
+
+<section class="showcase" id="product">
+  <div class="wrap showcase-grid">
+    <div>
+      <h2>Your inbox is not a task manager.</h2>
+      <p>Placement notices arrive as emails, PDFs, screenshots and portal posts. The useful bit is always the same: what, when, and what you need to do next.</p>
+      <p>The product idea is simple: turn messy notices into a calm, glanceable board. No productivity jargon. Just the next deadline.</p>
+    </div>
+    <div class="card-demo">
+      <div class="top">
+        <span class="tag">NOTICE PARSED · TC.43177.2027.62653</span>
+        <span class="tag" id="clockTag">●</span>
+      </div>
+      <div class="countdown" id="liveCountdown">02:00:00</div>
+      <div class="countdown-label">DEMO WINDOW · RESETS ON LOAD</div>
+      <div class="bars">
+        <div class="bar"><span id="b1"></span></div>
+        <div class="bar"><span id="b2"></span></div>
+        <div class="bar"><span id="b3"></span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="strip">
+  <div class="wrap">
+    <div class="strip-grid">
+      <div class="strip-item">
+        <div class="num">01 · CAPTURE</div>
+        <h3>Turn notices into rows</h3>
+        <p>Forward the placement email or paste the notice. Concourse extracts the drive code, company, and deadline itself.</p>
+      </div>
+      <div class="strip-item">
+        <div class="num">02 · PRIORITIZE</div>
+        <h3>Put urgency in plain sight</h3>
+        <p>Today, soon, tracked, archived. Status should be understandable before you read the full notice.</p>
+      </div>
+      <div class="strip-item">
+        <div class="num">03 · ACT</div>
+        <h3>Know what to do next</h3>
+        <p>The board is a starting point, not another dashboard to maintain. Open the notice, finish the task, move on.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="final-cta" id="cta">
+  <div class="wrap">
+    <h2>Built for the moment<br>you realize <em>the deadline is today.</em></h2>
+    <p>A small product idea born from a very real campus-placement scramble.</p>
+    <a href="#" class="btn-primary" id="notifyBtn">I’d use this →</a>
+  </div>
+</section>
+
+<footer>
+  <span>CONCOURSE — a placement-board concept, built for the assignment</span>
+  <span id="footClock"></span>
+</footer>
+
+
+<div class="modal-backdrop" id="detailModal">
+  <div class="modal">
+    <div class="modal-head">
+      <div><div class="next-kicker" id="detailCode">DRIVE</div><h3 id="detailCompany">Company</h3></div>
+      <button class="modal-close btn-small" data-close="detailModal">×</button>
+    </div>
+    <div class="detail-label">ROLE</div><div class="detail-value" id="detailRole"></div>
+    <div class="detail-label">DEADLINE</div><div class="detail-value" id="detailDeadline"></div>
+    <div class="detail-label">STATUS</div><div class="detail-value" id="detailStatus"></div>
+    <div class="detail-label">YOUR NEXT MOVE</div><div class="detail-value" id="detailAction"></div>
+    <div class="modal-actions">
+      <button class="btn-primary" id="markDoneBtn">Mark as done ✓</button>
+      <button class="danger-btn" id="archiveBtn">Archive drive</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-backdrop" id="addModal">
+  <div class="modal">
+    <div class="modal-head">
+      <div><div class="next-kicker">NEW DEPARTURE</div><h3>Add a drive</h3></div>
+      <button class="modal-close btn-small" data-close="addModal">×</button>
+    </div>
+    <form id="driveForm">
+      <div class="form-grid">
+        <div class="field full"><label>COMPANY *</label><input id="companyInput" required placeholder="e.g. Google"></div>
+        <div class="field"><label>ROLE *</label><input id="roleInput" required placeholder="e.g. SDE Intern"></div>
+        <div class="field"><label>DRIVE CODE *</label><input id="codeInput" required placeholder="e.g. TC.88421"></div>
+        <div class="field"><label>DEADLINE *</label><input id="dateInput" type="datetime-local" required></div>
+        <div class="field"><label>NEXT ACTION</label><input id="actionInput" placeholder="e.g. Submit coding test"></div>
+      </div>
+      <div class="form-error" id="formError">Please complete the required fields.</div>
+      <div class="modal-actions">
+        <button class="btn-primary" type="submit">Add to board →</button>
+        <button class="btn-small" type="button" data-close="addModal">Cancel</button>
+      </div>
+    </form>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+
+<div id="egg">
+  <div class="flip-msg" id="eggMsg">ALL DRIVES CLOSED.</div>
+  <p>go touch grass. (or hit ↑↑↓↓←→←→BA once more to close this)</p>
+</div>
+
+<script>
+(() => {
+  const seed = [
+    {id:'TC.43177',company:'Acdyon Technologies',role:'AI / Technology Intern',deadline:new Date(Date.now()+5*3600*1000).toISOString(),action:'Review the placement notice and submit the required application.',archived:false,done:false},
+    {id:'TC.18528',company:'HighRadius',role:'Account Based Marketing Intern',deadline:new Date(Date.now()+2*86400*1000).toISOString(),action:'Check eligibility and track the application window.',archived:false,done:false},
+    {id:'TC.62653',company:'Acdyon Technologies',role:'Frontend Challenge',deadline:new Date(Date.now()+86400*1000).toISOString(),action:'Finish and submit the frontend challenge.',archived:false,done:false},
+    {id:'TC.09001',company:'Previous Campus Drive',role:'Submission window ended',deadline:new Date(Date.now()-4*86400*1000).toISOString(),action:'No action required.',archived:true,done:true}
+  ];
+  const DRIVE_KEY='concourse-drives-v2';
+  let drives = JSON.parse(localStorage.getItem(DRIVE_KEY) || 'null') || seed;
+  let filter='all', selected=null, demo=7200;
+  const $=id=>document.getElementById(id);
+  const save=()=>localStorage.setItem(DRIVE_KEY,JSON.stringify(drives));
+  const esc=v=>String(v).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]));
+  const fmt=s=>[Math.floor(s/3600),Math.floor((s%3600)/60),s%60].map(x=>String(Math.max(0,x)).padStart(2,'0')).join(':');
+  const dateLabel=iso=>{
+    const d=new Date(iso),n=new Date();
+    if(d<n) return 'CLOSED';
+    if(d.toDateString()===n.toDateString()) return 'TODAY';
+    return d.toLocaleDateString('en-IN',{day:'2-digit',month:'short'}).toUpperCase();
+  };
+  const info=d=>{
+    if(d.archived)return ['closed','ARCHIVED'];
+    if(d.done)return ['done','DONE'];
+    const ms=new Date(d.deadline)-Date.now();
+    if(ms<=0)return ['closed','CLOSED'];
+    if(ms<=86400000)return ['soon','BOARDING SOON'];
+    return ['open','TRACKED'];
+  };
+  function render(){
+    let list=[...drives];
+    if(filter==='open')list=list.filter(d=>!d.archived&&!d.done&&new Date(d.deadline)>Date.now());
+    if(filter==='today')list=list.filter(d=>dateLabel(d.deadline)==='TODAY'&&!d.archived&&!d.done);
+    if(filter==='archived')list=list.filter(d=>d.archived||d.done);
+    const sort=$('sortSelect').value;
+    if(sort==='company')list.sort((a,b)=>a.company.localeCompare(b.company));
+    else if(sort==='status')list.sort((a,b)=>info(a)[1].localeCompare(info(b)[1]));
+    else list.sort((a,b)=>new Date(a.deadline)-new Date(b.deadline));
+    $('boardRows').innerHTML=list.length?list.map((d,i)=>{
+      const [cls,status]=info(d);
+      return `<div class="row" data-id="${esc(d.id)}">
+        <span class="code flip" style="animation-delay:${i*.04}s">${esc(d.id)}</span>
+        <span class="company flip" style="animation-delay:${i*.05}s">${esc(d.company)}</span>
+        <span class="role flip" style="animation-delay:${i*.06}s">${esc(d.role)}</span>
+        <span class="closes flip" style="animation-delay:${i*.07}s">${esc(dateLabel(d.deadline))}</span>
+        <span class="status ${cls} flip" style="animation-delay:${i*.08}s">${esc(status)}</span>
+      </div>`;
+    }).join(''):'<div class="empty-board">NO DRIVES IN THIS VIEW · TRY ANOTHER FILTER</div>';
+    document.querySelectorAll('.row[data-id]').forEach(r=>r.onclick=()=>openDetail(r.dataset.id));
+  }
+  function updateNext(){
+    const active=drives.filter(d=>!d.archived&&!d.done&&new Date(d.deadline)>Date.now()).sort((a,b)=>new Date(a.deadline)-new Date(b.deadline))[0];
+    if(!active){
+      $('nextCompany').textContent='No active departures';
+      $('nextRole').textContent='Add a drive to start tracking';
+      $('nextCountdown').textContent='--:--:--';
+      $('nextLabel').textContent='BOARD CLEAR';
+      $('nextProgress').style.width='0%';
+      return;
+    }
+    $('nextCompany').textContent=active.company;
+    $('nextRole').textContent=`${active.role} · ${active.id}`;
+    const seconds=Math.max(0,Math.floor((new Date(active.deadline)-Date.now())/1000));
+    $('nextCountdown').textContent=fmt(seconds);
+    $('nextLabel').textContent=seconds<=86400?'BOARDING SOON · DEADLINE':'DEPARTURE COUNTDOWN';
+    const total=Math.max(3600,Math.floor((new Date(active.deadline)-new Date(active.createdAt||Date.now()))/1000));
+    $('nextProgress').style.width=Math.min(100,Math.max(0,(1-seconds/total)*100))+'%';
+    $('nextOpen').dataset.id=active.id;
+  }
+  function openDetail(id){
+    const d=drives.find(x=>x.id===id);if(!d)return;
+    selected=id;const [cls,status]=info(d);
+    $('detailCode').textContent=d.id;$('detailCompany').textContent=d.company;
+    $('detailRole').textContent=d.role;
+    $('detailDeadline').textContent=new Date(d.deadline).toLocaleString('en-IN',{dateStyle:'medium',timeStyle:'short'});
+    $('detailStatus').innerHTML=`<span class="status ${cls}">${esc(status)}</span>`;
+    $('detailAction').textContent=d.action||'Open the notice and complete the next required step.';
+    $('markDoneBtn').textContent=d.done?'Marked done ✓':'Mark as done ✓';
+    $('archiveBtn').textContent=d.archived?'Restore drive':'Archive drive';
+    $('detailModal').classList.add('show');
+  }
+  function closeModal(id){$(id).classList.remove('show')}
+  function openAdd(){
+    $('driveForm').reset();
+    const d=new Date(Date.now()+86400000);d.setMinutes(d.getMinutes()-d.getTimezoneOffset());
+    $('dateInput').value=d.toISOString().slice(0,16);
+    $('formError').style.display='none';$('addModal').classList.add('show');
+    setTimeout(()=>$('companyInput').focus(),100);
+  }
+  function toast(msg){
+    const t=$('toast');t.textContent=msg;t.classList.add('show');
+    clearTimeout(window.toastTimer);window.toastTimer=setTimeout(()=>t.classList.remove('show'),2200);
+  }
+
+  // Theme
+  const saved=localStorage.getItem('concourse-theme')||'dark';document.body.dataset.theme=saved;
+  $('themeToggle').textContent=saved==='dark'?'DAYLIGHT MODE':'NIGHT MODE';
+  $('themeToggle').onclick=()=>{
+    const dark=document.body.dataset.theme==='dark';document.body.dataset.theme=dark?'light':'dark';
+    $('themeToggle').textContent=dark?'NIGHT MODE':'DAYLIGHT MODE';
+    localStorage.setItem('concourse-theme',document.body.dataset.theme);
+  };
+
+  // Filters and sorting
+  document.querySelectorAll('.filter-btn').forEach(b=>b.onclick=()=>{
+    document.querySelectorAll('.filter-btn').forEach(x=>x.classList.remove('active'));
+    b.classList.add('active');filter=b.dataset.filter;render();
+  });
+  $('sortSelect').onchange=render;
+  $('addDriveBtn').onclick=openAdd;$('nextAdd').onclick=openAdd;
+  $('nextOpen').onclick=()=>{if($('nextOpen').dataset.id)openDetail($('nextOpen').dataset.id)};
+  document.querySelectorAll('[data-close]').forEach(b=>b.onclick=()=>closeModal(b.dataset.close));
+  document.querySelectorAll('.modal-backdrop').forEach(m=>m.onclick=e=>{if(e.target===m)m.classList.remove('show')});
+
+  // Add drive
+  $('driveForm').onsubmit=e=>{
+    e.preventDefault();
+    const company=$('companyInput').value.trim(),role=$('roleInput').value.trim(),code=$('codeInput').value.trim(),deadline=$('dateInput').value,action=$('actionInput').value.trim();
+    if(!company||!role||!code||!deadline){$('formError').textContent='Please complete the required fields.';$('formError').style.display='block';return}
+    if(drives.some(d=>d.id.toLowerCase()===code.toLowerCase())){$('formError').textContent='That drive code already exists.';$('formError').style.display='block';return}
+    drives.push({id:code.toUpperCase(),company,role,deadline:new Date(deadline).toISOString(),action:action||'Review the notice and complete the next required step.',archived:false,done:false,createdAt:new Date().toISOString()});
+    save();render();updateNext();closeModal('addModal');toast(`${company} added to the board ✓`);
+  };
+
+  $('markDoneBtn').onclick=()=>{
+    const d=drives.find(x=>x.id===selected);if(!d)return;
+    d.done=true;save();render();updateNext();closeModal('detailModal');toast('Drive marked as done ✓');
+  };
+  $('archiveBtn').onclick=()=>{
+    const d=drives.find(x=>x.id===selected);if(!d)return;
+    d.archived=!d.archived;save();render();updateNext();closeModal('detailModal');toast(d.archived?'Drive archived':'Drive restored');
+  };
+
+  $('notifyBtn').onclick=()=>toast('Saved as a product idea — no fake signup needed.');
+
+  // Live clocks / countdown
+  setInterval(()=>{
+    demo=demo>0?demo-1:7200;
+    $('liveCountdown').textContent=fmt(demo);
+    $('footClock').textContent='LOCAL TIME · '+new Date().toLocaleTimeString();
+    $('clockTag').style.opacity=$('clockTag').style.opacity==='0.3'?'1':'0.3';
+    $('liveBoardText').textContent='REFRESHED '+new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
+    updateNext();render();
+  },1000);
+  $('liveCountdown').textContent=fmt(demo);
+  $('footClock').textContent='LOCAL TIME · '+new Date().toLocaleTimeString();
+
+  window.addEventListener('load',()=>{
+    setTimeout(()=>bars[0].style.width='78%',300);
+    setTimeout(()=>bars[1].style.width='45%',500);
+    setTimeout(()=>bars[2].style.width='92%',700);
+  });
+
+  // Existing easter egg
+  const bars=[document.getElementById('b1'),document.getElementById('b2'),document.getElementById('b3')];
+  const seq=['ArrowUp','ArrowUp','ArrowDown','ArrowDown','ArrowLeft','ArrowRight','ArrowLeft','ArrowRight','b','a'];let pos=0;
+  window.addEventListener('keydown',e=>{pos=e.key===seq[pos]?pos+1:0;if(pos===seq.length){document.getElementById('egg').classList.toggle('show');pos=0}});
+  document.getElementById('egg').onclick=()=>document.getElementById('egg').classList.remove('show');
+
+  render();updateNext();
+})();
+</script>
+
+</body>
+</html>
